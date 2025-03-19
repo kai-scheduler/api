@@ -1,0 +1,190 @@
+// Copyright 2025 NVIDIA CORPORATION
+// SPDX-License-Identifier: Apache-2.0
+
+package k8s_utils
+
+import (
+	"context"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/events"
+	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/scheduler/apis/config"
+	k8sframework "k8s.io/kubernetes/pkg/scheduler/framework"
+	"k8s.io/kubernetes/pkg/scheduler/framework/parallelize"
+	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/dynamicresources"
+	scheduling "k8s.io/kubernetes/pkg/scheduler/framework/plugins/volumebinding"
+	"k8s.io/kubernetes/pkg/scheduler/metrics"
+	"k8s.io/kubernetes/pkg/scheduler/util/assumecache"
+)
+
+// This is a stand-in for K8sFramework Handle that kubernetes uses for its plugins.
+// Only the methods needed for the predicate plugins are implemented.
+type K8sFramework struct {
+	kubeClient         kubernetes.Interface
+	informerFactory    informers.SharedInformerFactory
+	nodeInfoLister     k8sframework.NodeInfoLister
+	parallelizer       parallelize.Parallelizer
+	resourceClaimCache *assumecache.AssumeCache
+	sharedDRAManager   k8sframework.SharedDRAManager
+}
+
+var _ k8sframework.Handle = &K8sFramework{}
+
+func (f *K8sFramework) SharedDRAManager() k8sframework.SharedDRAManager {
+	if f.resourceClaimCache == nil {
+		rrInformer := f.informerFactory.Resource().V1beta1().ResourceClaims().Informer()
+		f.resourceClaimCache = assumecache.NewAssumeCache(
+			klog.LoggerWithName(klog.Background(), "ResourceClaimCache"),
+			rrInformer, "ResourceClaim", "", nil,
+		)
+	}
+
+	if f.sharedDRAManager == nil {
+		f.sharedDRAManager = dynamicresources.NewDRAManager(
+			context.Background(), f.resourceClaimCache, f.informerFactory,
+		)
+	}
+	return f.sharedDRAManager
+}
+
+type listersWrapper struct {
+	nodeInfoLister k8sframework.NodeInfoLister
+}
+
+func (lw *listersWrapper) NodeInfos() k8sframework.NodeInfoLister {
+	return lw.nodeInfoLister
+}
+
+func (lw *listersWrapper) StorageInfos() k8sframework.StorageInfoLister {
+	return nil
+}
+
+func (f *K8sFramework) SnapshotSharedLister() k8sframework.SharedLister {
+	return &listersWrapper{f.nodeInfoLister}
+}
+
+// IterateOverWaitingPods acquires a read lock and iterates over the WaitingPods map.
+func (f *K8sFramework) IterateOverWaitingPods(callback func(k8sframework.WaitingPod)) {
+	panic("not implemented")
+}
+
+// GetWaitingPod returns a reference to a WaitingPod given its UID.
+func (f *K8sFramework) GetWaitingPod(uid types.UID) k8sframework.WaitingPod {
+	panic("not implemented")
+}
+
+// HasFilterPlugins returns true if at least one filter plugin is defined.
+func (f *K8sFramework) HasFilterPlugins() bool {
+	panic("not implemented")
+}
+
+// HasScorePlugins returns true if at least one score plugin is defined.
+func (f *K8sFramework) HasScorePlugins() bool {
+	panic("not implemented")
+}
+
+// ListPlugins returns a map of extension point name to plugin names configured at each extension
+// point. Returns nil if no plugins were configured.
+func (f *K8sFramework) ListPlugins() map[string][]config.Plugin {
+	panic("not implemented")
+}
+
+// ClientSet returns a kubernetes clientset.
+func (f *K8sFramework) ClientSet() kubernetes.Interface {
+	return f.kubeClient
+}
+
+// SharedInformerFactory returns a shared informer factory.
+func (f *K8sFramework) SharedInformerFactory() informers.SharedInformerFactory {
+	return f.informerFactory
+}
+
+// VolumeBinder returns the volume binder used by scheduler.
+func (f *K8sFramework) VolumeBinder() scheduling.SchedulerVolumeBinder {
+	panic("not implemented")
+}
+
+// EventRecorder was introduced in k8s v1.19.6 and to be implemented
+func (f *K8sFramework) EventRecorder() events.EventRecorder {
+	return nil
+}
+
+func (f *K8sFramework) AddNominatedPod(logger klog.Logger, pod *k8sframework.PodInfo, nominatingInfo *k8sframework.NominatingInfo) {
+	panic("implement me")
+}
+
+func (f *K8sFramework) DeleteNominatedPodIfExists(pod *v1.Pod) {
+	panic("implement me")
+}
+
+func (f *K8sFramework) UpdateNominatedPod(logger klog.Logger, oldPod *v1.Pod, newPodInfo *k8sframework.PodInfo) {
+	panic("implement me")
+}
+
+func (f *K8sFramework) NominatedPodsForNode(nodeName string) []*k8sframework.PodInfo {
+	panic("implement me")
+}
+
+func (f *K8sFramework) RunPreScorePlugins(ctx context.Context, state *k8sframework.CycleState, pod *v1.Pod, infos []*k8sframework.NodeInfo) *k8sframework.Status {
+	panic("implement me")
+}
+
+func (f *K8sFramework) RunScorePlugins(ctx context.Context, state *k8sframework.CycleState, pod *v1.Pod, infos []*k8sframework.NodeInfo) ([]k8sframework.NodePluginScores, *k8sframework.Status) {
+	panic("implement me")
+}
+
+func (f *K8sFramework) RunFilterPlugins(ctx context.Context, state *k8sframework.CycleState, pod *v1.Pod, info *k8sframework.NodeInfo) *k8sframework.Status {
+	panic("implement me")
+}
+
+func (f *K8sFramework) RunPreFilterExtensionAddPod(ctx context.Context, state *k8sframework.CycleState, podToSchedule *v1.Pod, podInfoToAdd *k8sframework.PodInfo, nodeInfo *k8sframework.NodeInfo) *k8sframework.Status {
+	panic("implement me")
+}
+
+func (f *K8sFramework) RunPreFilterExtensionRemovePod(ctx context.Context, state *k8sframework.CycleState, podToSchedule *v1.Pod, podInfoToRemove *k8sframework.PodInfo, nodeInfo *k8sframework.NodeInfo) *k8sframework.Status {
+	panic("implement me")
+}
+
+func (f *K8sFramework) RejectWaitingPod(uid types.UID) bool {
+	panic("implement me")
+}
+
+func (f *K8sFramework) KubeConfig() *rest.Config {
+	panic("implement me")
+}
+
+func (f *K8sFramework) RunFilterPluginsWithNominatedPods(ctx context.Context, state *k8sframework.CycleState, pod *v1.Pod, info *k8sframework.NodeInfo) *k8sframework.Status {
+	panic("implement me")
+}
+
+func (f *K8sFramework) Extenders() []k8sframework.Extender {
+	panic("implement me")
+}
+
+func (f *K8sFramework) Parallelizer() parallelize.Parallelizer {
+	return f.parallelizer
+}
+
+func (f *K8sFramework) Activate(logger klog.Logger, pods map[string]*v1.Pod) {
+	panic("implement me")
+}
+
+// NewFrameworkHandle creates a FrameworkHandle interface, which is used by k8s plugins.
+func NewFrameworkHandle(
+	client kubernetes.Interface,
+	informerFactory informers.SharedInformerFactory,
+	nodeInfoLister k8sframework.NodeInfoLister,
+) k8sframework.Handle {
+	metrics.InitMetrics()
+	return &K8sFramework{
+		kubeClient:      client,
+		informerFactory: informerFactory,
+		nodeInfoLister:  nodeInfoLister,
+		parallelizer:    parallelize.NewParallelizer(parallelize.DefaultParallelism),
+	}
+}
