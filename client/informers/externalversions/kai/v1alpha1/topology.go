@@ -26,9 +26,9 @@ import (
 	context "context"
 	time "time"
 
-	versioned "github.com/kai-scheduler/KAI-scheduler/pkg/apis/client/clientset/versioned"
-	internalinterfaces "github.com/kai-scheduler/KAI-scheduler/pkg/apis/client/informers/externalversions/internalinterfaces"
-	kaiv1alpha1 "github.com/kai-scheduler/KAI-scheduler/pkg/apis/client/listers/kai/v1alpha1"
+	versioned "github.com/kai-scheduler/KAI-Scheduler-API/client/clientset/versioned"
+	internalinterfaces "github.com/kai-scheduler/KAI-Scheduler-API/client/informers/externalversions/internalinterfaces"
+	kaiv1alpha1 "github.com/kai-scheduler/KAI-Scheduler-API/client/listers/kai/v1alpha1"
 	apiskaiv1alpha1 "github.com/kai-scheduler/KAI-scheduler/pkg/apis/kai/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"

@@ -4,7 +4,7 @@
 package podgroup
 
 import (
-	"github.com/kai-scheduler/KAI-scheduler/pkg/apis/scheduling/v2alpha2"
+	"github.com/kai-scheduler/KAI-Scheduler-API/api/scheduling/v2alpha2"
 )
 
 const nonPreemptiblePriorityThreshold = 100
