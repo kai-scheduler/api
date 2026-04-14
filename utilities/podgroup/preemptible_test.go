@@ -6,8 +6,8 @@ package podgroup_test
 import (
 	"testing"
 
-	"github.com/kai-scheduler/KAI-Scheduler-API/api/scheduling/v2alpha2"
-	pg "github.com/kai-scheduler/KAI-Scheduler-API/utilities/podgroup"
+	"github.com/kai-scheduler/api/api/scheduling/v2alpha2"
+	pg "github.com/kai-scheduler/api/utilities/podgroup"
 	"github.com/stretchr/testify/assert"
 )
 

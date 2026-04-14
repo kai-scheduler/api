@@ -1,11 +1,11 @@
-# KAI-Scheduler-API Development Guide
+# api Development Guide
 
-KAI-Scheduler-API is a standalone Go module providing Kubernetes API types, generated clients, and utilities for GPU-aware batch scheduling with KAI Scheduler.
+api is a standalone Go module providing Kubernetes API types, generated clients, and utilities for GPU-aware batch scheduling with KAI Scheduler.
 
 ## Repository Structure
 
 ```
-KAI-Scheduler-API/
+api/
 ├── api/scheduling/          # API type definitions (Queue, PodGroup, BindRequest)
 ├── client/                  # Generated clientset, informers, listers
 ├── config/crd/              # CRD YAML manifests
@@ -104,14 +104,14 @@ When making changes to both SDK and kai-scheduler simultaneously:
 2. **Test locally** using replace directive in kai-scheduler:
    ```go
    // kai-scheduler/go.mod
-   replace github.com/kai-scheduler/KAI-Scheduler-API => ../KAI-Scheduler-API
+   replace github.com/kai-scheduler/api => ../api
    ```
 3. **Run kai-scheduler tests** with local SDK
 4. **Release SDK** when ready (tag version)
 5. **Update kai-scheduler** to use released SDK version:
    ```bash
    cd kai-scheduler
-   go get github.com/kai-scheduler/KAI-Scheduler-API@v0.x.y
+   go get github.com/kai-scheduler/api@v0.x.y
    # Remove replace directive
    ```
 
@@ -128,7 +128,7 @@ import (
     v1 "k8s.io/api/core/v1"
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-    "github.com/kai-scheduler/KAI-Scheduler-API/constants"
+    "github.com/kai-scheduler/api/constants"
 )
 ```
 

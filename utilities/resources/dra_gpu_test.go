@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/kai-scheduler/KAI-Scheduler-API/constants"
+	"github.com/kai-scheduler/api/constants"
 )
 
 func TestDRA(t *testing.T) {

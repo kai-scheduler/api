@@ -1,4 +1,4 @@
-module github.com/kai-scheduler/KAI-Scheduler-API
+module github.com/kai-scheduler/api
 
 go 1.26.1
 

@@ -1,13 +1,13 @@
 # Changelog
 
-All notable changes to KAI-Scheduler-API will be documented in this file.
+All notable changes to api will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [v0.1.0] - 2026-04-13
 
-Initial release of KAI-Scheduler-API as a standalone repository extracted from KAI-Scheduler.
+Initial release of api as a standalone repository extracted from KAI-Scheduler.
 
 ### Added
 
@@ -45,4 +45,4 @@ Initial release of KAI-Scheduler-API as a standalone repository extracted from K
 - Scheduler-specific utilities (framework handles, webhook wiring) remain in kai-scheduler
 - Dependencies: Kubernetes v0.35.3, controller-runtime v0.23.3
 
-[v0.1.0]: https://github.com/kai-scheduler/KAI-Scheduler-API/releases/tag/v0.1.0
+[v0.1.0]: https://github.com/kai-scheduler/api/releases/tag/v0.1.0

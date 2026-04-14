@@ -11,7 +11,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/kai-scheduler/KAI-Scheduler-API/constants"
+	"github.com/kai-scheduler/api/constants"
 )
 
 var (

@@ -4,7 +4,7 @@ Kubernetes API types and utilities for GPU-aware batch scheduling with KAI Sched
 
 ## Overview
 
-KAI-Scheduler-API provides the API definitions, generated clients, and utilities for working with KAI Scheduler's custom resources:
+This package provides the API definitions, generated clients, and utilities for working with KAI Scheduler's custom resources:
 
 - **Queue** (v2): Hierarchical queue resource for managing workload prioritization
 - **PodGroup** (v2alpha2): Batch job grouping with gang scheduling support
@@ -13,7 +13,7 @@ KAI-Scheduler-API provides the API definitions, generated clients, and utilities
 ## Installation
 
 ```bash
-go get github.com/kai-scheduler/KAI-Scheduler-API@v0.1.0
+go get github.com/kai-scheduler/api@v0.1.0
 ```
 
 ## Usage
@@ -22,8 +22,8 @@ go get github.com/kai-scheduler/KAI-Scheduler-API@v0.1.0
 
 ```go
 import (
-    queuev2 "github.com/kai-scheduler/KAI-Scheduler-API/api/scheduling/v2"
-    "github.com/kai-scheduler/KAI-Scheduler-API/client/clientset/versioned"
+    queuev2 "github.com/kai-scheduler/api/api/scheduling/v2"
+    "github.com/kai-scheduler/api/client/clientset/versioned"
 )
 
 // Create a clientset
@@ -38,8 +38,8 @@ queues, _ := client.SchedulingV2().Queues().List(context.TODO(), metav1.ListOpti
 
 ```go
 import (
-    podgroupv2alpha2 "github.com/kai-scheduler/KAI-Scheduler-API/api/scheduling/v2alpha2"
-    "github.com/kai-scheduler/KAI-Scheduler-API/utilities/podgroup"
+    podgroupv2alpha2 "github.com/kai-scheduler/api/api/scheduling/v2alpha2"
+    "github.com/kai-scheduler/api/utilities/podgroup"
 )
 
 // Calculate preemptibility from priority
@@ -51,7 +51,7 @@ preemptibility := podgroup.CalculatePreemptibility("", int32(50))
 
 ```go
 import (
-    "github.com/kai-scheduler/KAI-Scheduler-API/utilities/resources"
+    "github.com/kai-scheduler/api/utilities/resources"
 )
 
 // Check if pod requests GPU fractions
@@ -127,7 +127,7 @@ kubectl apply -f config/crd/
 Common constants for GPU annotations and labels are available in the `constants` package:
 
 ```go
-import "github.com/kai-scheduler/KAI-Scheduler-API/constants"
+import "github.com/kai-scheduler/api/constants"
 
 // GPU fraction annotation
 constants.GpuFraction

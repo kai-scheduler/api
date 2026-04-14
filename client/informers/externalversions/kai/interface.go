@@ -23,8 +23,8 @@ SPDX-License-Identifier: Apache-2.0
 package kai
 
 import (
-	internalinterfaces "github.com/kai-scheduler/KAI-Scheduler-API/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/kai-scheduler/KAI-Scheduler-API/client/informers/externalversions/kai/v1alpha1"
+	internalinterfaces "github.com/kai-scheduler/api/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/kai-scheduler/api/client/informers/externalversions/kai/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.
