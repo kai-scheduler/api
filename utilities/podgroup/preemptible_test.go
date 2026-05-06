@@ -7,13 +7,9 @@ import (
 	"testing"
 
 	"github.com/kai-scheduler/api/api/scheduling/v2alpha2"
+	"github.com/kai-scheduler/api/constants"
 	pg "github.com/kai-scheduler/api/utilities/podgroup"
 	"github.com/stretchr/testify/assert"
-)
-
-const (
-	// PriorityBuildNumber threshold for preemptibility calculation
-	PriorityBuildNumber = 100
 )
 
 func TestCalculatePreemptibility(t *testing.T) {
@@ -55,21 +51,21 @@ func TestCalculatePreemptibility(t *testing.T) {
 		{
 			name:           "unspecified with priority equal to build number (non-preemptible)",
 			preemptibility: "",
-			priority:       PriorityBuildNumber,
+			priority:       constants.PriorityBuildNumber,
 			expectedResult: v2alpha2.NonPreemptible,
 			expectedError:  false,
 		},
 		{
 			name:           "unspecified with priority just below build number (preemptible)",
 			preemptibility: "",
-			priority:       PriorityBuildNumber - 1,
+			priority:       constants.PriorityBuildNumber - 1,
 			expectedResult: v2alpha2.Preemptible,
 			expectedError:  false,
 		},
 		{
 			name:           "unspecified with priority just above build number (non-preemptible)",
 			preemptibility: "",
-			priority:       PriorityBuildNumber + 1,
+			priority:       constants.PriorityBuildNumber + 1,
 			expectedResult: v2alpha2.NonPreemptible,
 			expectedError:  false,
 		},

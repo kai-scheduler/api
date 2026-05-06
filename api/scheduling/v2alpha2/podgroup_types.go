@@ -34,9 +34,17 @@ import (
 type PodGroupSpec struct {
 	// MinMember defines the minimal number of members to run the PodGroup;
 	// if there are not enough resources to start all required members, the scheduler will not start anyone.
+	// Mutually exclusive with MinSubGroup.
 	// +kubebuilder:validation:Nullable
 	// +kubebuilder:validation:Minimum=1
 	MinMember *int32 `json:"minMember,omitempty" protobuf:"varint,1,opt,name=minMember"`
+
+	// MinSubGroup defines the minimal number of direct child SubGroups required for this PodGroup to be schedulable.
+	// Only applicable when SubGroups are defined.
+	// Mutually exclusive with MinMember.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=1
+	MinSubGroup *int32 `json:"minSubGroup,omitempty"`
 
 	// Queue defines the queue to allocate resource for PodGroup; if queue does not exist,
 	// the PodGroup will not be scheduled.
@@ -101,17 +109,29 @@ func ParsePreemptibility(value string) (Preemptibility, error) {
 
 type SubGroup struct {
 	// Name uniquely identifies the SubGroup within the PodGroup.
+	// Must be a valid DNS label (RFC 1123).
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
 	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
 
 	// MinMember defines the minimal number of members to run this SubGroup;
 	// if there are not enough resources to start all required members, the scheduler will not start anyone.
+	// Mutually exclusive with MinSubGroup.
 	// +kubebuilder:validation:Nullable
 	// +kubebuilder:validation:Minimum=0
 	MinMember *int32 `json:"minMember,omitempty" protobuf:"varint,2,opt,name=minMember"`
 
-	// Parent is an optional attribute that specifies the name of the parent SubGroup
+	// MinSubGroup defines the minimal number of direct child SubGroups required for this SubGroup to be schedulable.
+	// Only applicable when this SubGroup has child SubGroups.
+	// Mutually exclusive with MinMember.
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=0
+	MinSubGroup *int32 `json:"minSubGroup,omitempty"`
+
+	// Parent is an optional attribute that specifies the name of the parent SubGroup.
+	// Must be a valid DNS label (RFC 1123).
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
 	Parent *string `json:"parent,omitempty" protobuf:"bytes,3,opt,name=parent"`
 
 	// TopologyConstraint defines the topology constraints for this SubGroup

@@ -23,7 +23,7 @@ SPDX-License-Identifier: Apache-2.0
 package fake
 
 import (
-	kaiv1alpha1 "github.com/kai-scheduler/KAI-scheduler/pkg/apis/kai/v1alpha1"
+	kaiv1alpha1 "github.com/kai-scheduler/api/api/kai/v1alpha1"
 	schedulingv1alpha2 "github.com/kai-scheduler/api/api/scheduling/v1alpha2"
 	schedulingv2 "github.com/kai-scheduler/api/api/scheduling/v2"
 	schedulingv2alpha2 "github.com/kai-scheduler/api/api/scheduling/v2alpha2"

@@ -25,7 +25,7 @@ package externalversions
 import (
 	fmt "fmt"
 
-	v1alpha1 "github.com/kai-scheduler/KAI-scheduler/pkg/apis/kai/v1alpha1"
+	v1alpha1 "github.com/kai-scheduler/api/api/kai/v1alpha1"
 	v1alpha2 "github.com/kai-scheduler/api/api/scheduling/v1alpha2"
 	v2 "github.com/kai-scheduler/api/api/scheduling/v2"
 	v2alpha2 "github.com/kai-scheduler/api/api/scheduling/v2alpha2"
