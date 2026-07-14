@@ -6,11 +6,15 @@ package podgroup_test
 import (
 	"testing"
 
-	"github.com/kai-scheduler/api/api/scheduling/v2alpha2"
-	"github.com/kai-scheduler/api/constants"
+	"github.com/kai-scheduler/api/scheduling/v2alpha2"
 	pg "github.com/kai-scheduler/api/utilities/podgroup"
 	"github.com/stretchr/testify/assert"
 )
+
+// priorityBuildNumber mirrors the scheduler's non-preemptible priority threshold
+// (pkg/scheduler/constants.PriorityBuildNumber), kept local to avoid depending on
+// scheduler-internal packages from the API module.
+const priorityBuildNumber = 100
 
 func TestCalculatePreemptibility(t *testing.T) {
 	tests := []struct {
@@ -51,21 +55,21 @@ func TestCalculatePreemptibility(t *testing.T) {
 		{
 			name:           "unspecified with priority equal to build number (non-preemptible)",
 			preemptibility: "",
-			priority:       constants.PriorityBuildNumber,
+			priority:       priorityBuildNumber,
 			expectedResult: v2alpha2.NonPreemptible,
 			expectedError:  false,
 		},
 		{
 			name:           "unspecified with priority just below build number (preemptible)",
 			preemptibility: "",
-			priority:       constants.PriorityBuildNumber - 1,
+			priority:       priorityBuildNumber - 1,
 			expectedResult: v2alpha2.Preemptible,
 			expectedError:  false,
 		},
 		{
 			name:           "unspecified with priority just above build number (non-preemptible)",
 			preemptibility: "",
-			priority:       constants.PriorityBuildNumber + 1,
+			priority:       priorityBuildNumber + 1,
 			expectedResult: v2alpha2.NonPreemptible,
 			expectedError:  false,
 		},

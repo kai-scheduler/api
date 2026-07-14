@@ -10,7 +10,7 @@ import (
 	context "context"
 
 	scheme "github.com/kai-scheduler/api/client/clientset/versioned/scheme"
-	schedulingv1alpha2 "github.com/kai-scheduler/api/api/scheduling/v1alpha2"
+	schedulingv1alpha2 "github.com/kai-scheduler/api/scheduling/v1alpha2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

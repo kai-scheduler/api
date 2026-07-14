@@ -5,44 +5,41 @@ All notable changes to api will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.1.0] - 2026-04-13
+## [v0.1.0]
 
-Initial release of api as a standalone repository extracted from KAI-Scheduler.
+Initial release of the standalone `github.com/kai-scheduler/api` module, seeded from KAI-Scheduler `main`.
 
 ### Added
 
-- **API Types** with full git history preserved:
-  - Queue (v2) - Hierarchical queue resource
-  - PodGroup (v2alpha2) - Gang scheduling with subgroups
-  - BindRequest (v1alpha2) - Pod binding coordination
+- **API types** (client-backed CRD contracts):
+  - Queue (`scheduling.run.ai/v2`) — hierarchical queue resource
+  - PodGroup (`scheduling.run.ai/v2alpha2`) — gang scheduling with subgroups, plus validating webhook
+  - BindRequest, NumaPlacementRequest (`scheduling.run.ai/v1alpha2`) — pod binding coordination
+  - Topology (`kai.scheduler/v1alpha1`) — topology-aware scheduling input
 
-- **Generated Clients**:
-  - Clientset for all API versions
-  - Informers for watch/cache patterns
-  - Listers for indexed queries
+- **Generated clients** — single clientset, informer factory, and listers spanning both the
+  `scheduling.run.ai` and `kai.scheduler/v1alpha1` groups.
 
-- **CRD Manifests**:
-  - `config/crd/scheduling.run.ai_queues.yaml`
-  - `config/crd/scheduling.run.ai_podgroups.yaml`
-  - `config/crd/scheduling.run.ai_bindrequests.yaml`
+- **CRD manifests** (`config/crd/`):
+  - `scheduling.run.ai_queues.yaml`
+  - `scheduling.run.ai_podgroups.yaml`
+  - `scheduling.run.ai_bindrequests.yaml`
+  - `kai.scheduler_topologies.yaml`
 
 - **Utilities**:
-  - `utilities/resources/` - GPU sharing utilities:
-    - GPU fraction/memory extraction from pod annotations
-    - DRA (Dynamic Resource Allocation) support
-    - Resource list operations
-  - `utilities/podgroup/` - PodGroup business logic:
-    - `CalculatePreemptibility()` - Priority-based preemptibility
+  - `utilities/resources/` — GPU fraction/memory extraction, DRA support, resource list operations
+  - `utilities/podgroup/` — `CalculatePreemptibility()`
 
-- **Constants**:
-  - GPU annotation keys (GpuFraction, GpuMemory, etc.)
-  - Common labels and selectors
+- **Constants** — GPU annotation keys, labels, and priority constants.
+
+- **Code generation** — `make generate` (deepcopy), `make manifests` (CRDs), `make clients`
+  (clientset/informers/listers) reproduce all generated artifacts.
 
 ### Notes
 
-- Extracted from kai-scheduler v0.14.0 with full commit history (696+ commits)
-- Clean separation: Only client-facing API contracts included
-- Scheduler-specific utilities (framework handles, webhook wiring) remain in kai-scheduler
-- Dependencies: Kubernetes v0.35.3, controller-runtime v0.23.3
+- Seeded fresh from `main` (no git history preserved); Apache 2.0 / NVIDIA attribution retained via per-file headers.
+- Scheduler-internal code stays in kai-scheduler: `kai.scheduler/v1` config types (Config, SchedulingShard),
+  scheduler-framework glue (`k8s_utils`), and feature gates.
+- Dependencies: Kubernetes v0.35.4, controller-runtime v0.23.3, Go 1.26.3.
 
 [v0.1.0]: https://github.com/kai-scheduler/api/releases/tag/v0.1.0

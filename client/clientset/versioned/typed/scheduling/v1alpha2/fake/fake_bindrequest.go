@@ -8,7 +8,7 @@ package fake
 
 import (
 	schedulingv1alpha2 "github.com/kai-scheduler/api/client/clientset/versioned/typed/scheduling/v1alpha2"
-	v1alpha2 "github.com/kai-scheduler/api/api/scheduling/v1alpha2"
+	v1alpha2 "github.com/kai-scheduler/api/scheduling/v1alpha2"
 	gentype "k8s.io/client-go/gentype"
 )
 
