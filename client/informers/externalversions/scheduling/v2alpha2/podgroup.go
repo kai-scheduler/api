@@ -29,7 +29,7 @@ import (
 	versioned "github.com/kai-scheduler/api/client/clientset/versioned"
 	internalinterfaces "github.com/kai-scheduler/api/client/informers/externalversions/internalinterfaces"
 	schedulingv2alpha2 "github.com/kai-scheduler/api/client/listers/scheduling/v2alpha2"
-	apisschedulingv2alpha2 "github.com/kai-scheduler/api/api/scheduling/v2alpha2"
+	apischedulingv2alpha2 "github.com/kai-scheduler/api/scheduling/v2alpha2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -61,7 +61,7 @@ func NewPodGroupInformer(client versioned.Interface, namespace string, resyncPer
 // one. This reduces memory footprint and number of connections to the server.
 func NewFilteredPodGroupInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
@@ -86,8 +86,8 @@ func NewFilteredPodGroupInformer(client versioned.Interface, namespace string, r
 				}
 				return client.SchedulingV2alpha2().PodGroups(namespace).Watch(ctx, options)
 			},
-		},
-		&apisschedulingv2alpha2.PodGroup{},
+		}, client),
+		&apischedulingv2alpha2.PodGroup{},
 		resyncPeriod,
 		indexers,
 	)
@@ -98,7 +98,7 @@ func (f *podGroupInformer) defaultInformer(client versioned.Interface, resyncPer
 }
 
 func (f *podGroupInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apisschedulingv2alpha2.PodGroup{}, f.defaultInformer)
+	return f.factory.InformerFor(&apischedulingv2alpha2.PodGroup{}, f.defaultInformer)
 }
 
 func (f *podGroupInformer) Lister() schedulingv2alpha2.PodGroupLister {

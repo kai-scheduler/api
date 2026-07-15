@@ -13,7 +13,7 @@ import (
 	versioned "github.com/kai-scheduler/api/client/clientset/versioned"
 	internalinterfaces "github.com/kai-scheduler/api/client/informers/externalversions/internalinterfaces"
 	schedulingv1alpha2 "github.com/kai-scheduler/api/client/listers/scheduling/v1alpha2"
-	apisschedulingv1alpha2 "github.com/kai-scheduler/api/api/scheduling/v1alpha2"
+	apischedulingv1alpha2 "github.com/kai-scheduler/api/scheduling/v1alpha2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -45,7 +45,7 @@ func NewBindRequestInformer(client versioned.Interface, namespace string, resync
 // one. This reduces memory footprint and number of connections to the server.
 func NewFilteredBindRequestInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
@@ -70,8 +70,8 @@ func NewFilteredBindRequestInformer(client versioned.Interface, namespace string
 				}
 				return client.SchedulingV1alpha2().BindRequests(namespace).Watch(ctx, options)
 			},
-		},
-		&apisschedulingv1alpha2.BindRequest{},
+		}, client),
+		&apischedulingv1alpha2.BindRequest{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,7 +82,7 @@ func (f *bindRequestInformer) defaultInformer(client versioned.Interface, resync
 }
 
 func (f *bindRequestInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apisschedulingv1alpha2.BindRequest{}, f.defaultInformer)
+	return f.factory.InformerFor(&apischedulingv1alpha2.BindRequest{}, f.defaultInformer)
 }
 
 func (f *bindRequestInformer) Lister() schedulingv1alpha2.BindRequestLister {

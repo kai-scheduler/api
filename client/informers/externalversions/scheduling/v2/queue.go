@@ -29,7 +29,7 @@ import (
 	versioned "github.com/kai-scheduler/api/client/clientset/versioned"
 	internalinterfaces "github.com/kai-scheduler/api/client/informers/externalversions/internalinterfaces"
 	schedulingv2 "github.com/kai-scheduler/api/client/listers/scheduling/v2"
-	apisschedulingv2 "github.com/kai-scheduler/api/api/scheduling/v2"
+	apischedulingv2 "github.com/kai-scheduler/api/scheduling/v2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -61,7 +61,7 @@ func NewQueueInformer(client versioned.Interface, namespace string, resyncPeriod
 // one. This reduces memory footprint and number of connections to the server.
 func NewFilteredQueueInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
@@ -86,8 +86,8 @@ func NewFilteredQueueInformer(client versioned.Interface, namespace string, resy
 				}
 				return client.SchedulingV2().Queues(namespace).Watch(ctx, options)
 			},
-		},
-		&apisschedulingv2.Queue{},
+		}, client),
+		&apischedulingv2.Queue{},
 		resyncPeriod,
 		indexers,
 	)
@@ -98,7 +98,7 @@ func (f *queueInformer) defaultInformer(client versioned.Interface, resyncPeriod
 }
 
 func (f *queueInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apisschedulingv2.Queue{}, f.defaultInformer)
+	return f.factory.InformerFor(&apischedulingv2.Queue{}, f.defaultInformer)
 }
 
 func (f *queueInformer) Lister() schedulingv2.QueueLister {

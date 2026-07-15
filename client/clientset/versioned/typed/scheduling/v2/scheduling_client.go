@@ -26,7 +26,7 @@ import (
 	http "net/http"
 
 	scheme "github.com/kai-scheduler/api/client/clientset/versioned/scheme"
-	schedulingv2 "github.com/kai-scheduler/api/api/scheduling/v2"
+	schedulingv2 "github.com/kai-scheduler/api/scheduling/v2"
 	rest "k8s.io/client-go/rest"
 )
 

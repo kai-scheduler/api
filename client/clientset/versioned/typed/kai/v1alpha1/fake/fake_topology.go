@@ -24,7 +24,7 @@ package fake
 
 import (
 	kaiv1alpha1 "github.com/kai-scheduler/api/client/clientset/versioned/typed/kai/v1alpha1"
-	v1alpha1 "github.com/kai-scheduler/KAI-scheduler/pkg/apis/kai/v1alpha1"
+	v1alpha1 "github.com/kai-scheduler/api/kai/v1alpha1"
 	gentype "k8s.io/client-go/gentype"
 )
 
