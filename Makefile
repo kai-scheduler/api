@@ -20,8 +20,9 @@ build: ## Build all packages.
 	go build ./...
 
 .PHONY: test
-test: ## Run all tests.
-	go test ./...
+test: ## Run all tests with coverage.
+	mkdir -p coverage
+	go test -coverprofile=coverage/coverage.out ./...
 
 .PHONY: validate
 validate: ## Check formatting and vet without writing files (CI).
