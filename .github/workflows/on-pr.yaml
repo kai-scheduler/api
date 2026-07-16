@@ -1,0 +1,152 @@
+# Copyright 2025 NVIDIA CORPORATION
+# SPDX-License-Identifier: Apache-2.0
+
+name: KAI API - Pull Request
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  merge_group:
+    types: [checks_requested]
+
+concurrency:
+  group: ${{ github.event_name == 'merge_group' && github.ref || github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check-build-and-test-required:
+    name: Check if build and test are required
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Check changed files
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          predicate-quantifier: "every"
+          filters: |
+            docs:
+              - '**/*.md'
+              - 'docs/**'
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+
+  validate-and-test:
+    needs: [ check-build-and-test-required ]
+    if: needs.check-build-and-test-required.outputs.code == 'true'
+    name: Validate & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: true
+
+      - name: Run validation
+        run: make validate
+
+      - name: Run tests
+        run: make test
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v7
+        with:
+          name: code-coverage
+          path: coverage/coverage.out
+
+      - name: Calculate total coverage
+        run: |
+          if [ ! -s coverage/coverage.out ]; then
+            exit 0
+          fi
+
+          COVERAGE=$(go tool cover -func=coverage/coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+')
+          echo "$COVERAGE" > coverage/total-coverage.txt
+
+      - name: Archive total coverage
+        if: hashFiles('coverage/total-coverage.txt') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: total-coverage
+          path: coverage/total-coverage.txt
+
+  code-coverage-report:
+    name: Code Coverage Report
+    runs-on: ubuntu-latest
+    needs: [ validate-and-test, check-build-and-test-required ]
+    if: github.event_name != 'merge_group' && needs.check-build-and-test-required.outputs.code == 'true' && github.base_ref == 'main'
+    steps:
+      - uses: fgrosse/go-coverage-report@cbeb2ab2e32591d690337146ba02a911cc566f3f
+        id: coverage_reporter
+        with:
+          coverage-artifact-name: "code-coverage"
+          coverage-file-name: "coverage.out"
+          root-package: "github.com/kai-scheduler/api"
+          github-baseline-workflow-ref: update-coverage-badge.yaml
+          skip-comment: true
+      - name: Download total coverage artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: total-coverage
+          path: coverage-summary
+      - name: Download coverage badge branch
+        uses: actions/checkout@v7
+        with:
+          ref: coverage-badge
+          path: coverage-badge
+      - name: Calculate coverage totals
+        id: coverage_totals
+        run: |
+          PR_COVERAGE=$(cat coverage-summary/total-coverage.txt)
+          echo "pr=$PR_COVERAGE" >> $GITHUB_OUTPUT
+
+          BASELINE_COVERAGE=$(grep -oE '[0-9]+\.[0-9]+%' coverage-badge/badges/coverage.svg | head -1 | tr -d '%')
+          echo "baseline=$BASELINE_COVERAGE" >> $GITHUB_OUTPUT
+
+          DELTA=$(awk -v pr="$PR_COVERAGE" -v baseline="$BASELINE_COVERAGE" 'BEGIN { printf "%.2f", pr - baseline }')
+          echo "delta=$DELTA" >> $GITHUB_OUTPUT
+      - name: Save coverage report to file
+        env:
+          REPORT_BODY: ${{ steps.coverage_reporter.outputs.coverage_report }}
+          BASELINE_COVERAGE: ${{ steps.coverage_totals.outputs.baseline }}
+          PR_COVERAGE: ${{ steps.coverage_totals.outputs.pr }}
+          COVERAGE_DELTA: ${{ steps.coverage_totals.outputs.delta }}
+        run: |
+          {
+            echo "**Total coverage:** ${BASELINE_COVERAGE}% -> ${PR_COVERAGE}% (delta ${COVERAGE_DELTA}%)"
+            if [ -n "$REPORT_BODY" ]; then
+              echo ""
+              echo "$REPORT_BODY"
+            fi
+          } > coverage-report.txt
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report-for-comment
+          path: coverage-report.txt
+      - name: Save PR number
+        run: echo "${{ github.event.number }}" > pr_number.txt
+      - name: Upload PR number
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-number-for-comment
+          path: pr_number.txt
+
+  skip-build-and-test-message:
+    name: Skip Build and Test Message
+    needs: [ check-build-and-test-required ]
+    if: needs.check-build-and-test-required.outputs.code != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip message
+        run: |
+          echo "Skipping build and test since only documentation files (.md or docs/) were changed."
