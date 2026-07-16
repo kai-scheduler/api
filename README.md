@@ -1,4 +1,16 @@
+
+
 # KAI Scheduler API
+
+> [!WARNING]
+>  🚧 **Work in progress** 🚧
+> 
+> This module is still under active development 🛠️.
+> 
+> APIs may change without notice, and it is not yet recommended for direct production use ⚠️.
+> 
+> For now, consume it through KAI Scheduler unless you are prepared to track breaking changes closely.
+
 
 Kubernetes API types and utilities for GPU-aware batch scheduling with KAI Scheduler.
 
