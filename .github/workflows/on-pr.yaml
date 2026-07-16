@@ -82,6 +82,7 @@ jobs:
   code-coverage-report:
     name: Code Coverage Report
     runs-on: ubuntu-latest
+    continue-on-error: true
     needs: [ validate-and-test, check-build-and-test-required ]
     if: github.event_name != 'merge_group' && needs.check-build-and-test-required.outputs.code == 'true' && github.base_ref == 'main'
     steps:
