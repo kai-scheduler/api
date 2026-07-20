@@ -1,0 +1,66 @@
+# Copyright 2026 NVIDIA CORPORATION
+# SPDX-License-Identifier: Apache-2.0
+
+name: Approval Gatekeeper
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+jobs:
+  check-approvals:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Approval Count
+        uses: actions/github-script@v9
+        with:
+          script: |
+            // 1. Get PR details
+            const prNumber = context.payload.pull_request ? context.payload.pull_request.number : context.payload.issue.number;
+            const { owner, repo } = context.repo;
+
+            const pr = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+            const author = pr.data.user.login;
+
+            // 2. Check repo permission level — more reliable than author_association on new repos
+            let isTrusted = false;
+            try {
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username: author });
+              isTrusted = ['admin', 'write'].includes(data.permission);
+              console.log(`PR author ${author} has permission: ${data.permission}`);
+            } catch (e) {
+              console.log(`Could not determine permission for ${author}: ${e.message}`);
+            }
+
+            // 3. Trusted authors only need the standard 1-approval branch protection rule
+            if (isTrusted) {
+              console.log("Author has write/admin access. Standard approval rules apply.");
+              return;
+            }
+
+            // 4. External contributors require 2 approvals to merge
+            console.log("Author is an external contributor. Enforcing 2 approvals.");
+
+            const reviews = await github.rest.pulls.listReviews({ owner, repo, pull_number: prNumber });
+
+            // Latest review state per trusted reviewer only
+            const latestReviews = {};
+            for (const review of reviews.data) {
+              const { data: rPerm } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner, repo, username: review.user.login,
+              }).catch(() => ({ data: { permission: 'none' } }));
+              if (['admin', 'write'].includes(rPerm.permission)) {
+                latestReviews[review.user.id] = review.state;
+              }
+            }
+
+            const approvalCount = Object.values(latestReviews).filter(s => s === 'APPROVED').length;
+            console.log(`Current Approval Count: ${approvalCount}`);
+
+            if (approvalCount < 2) {
+              core.setFailed(`External contributors require 2 approvals to merge. Current: ${approvalCount}`);
+            } else {
+              console.log("Approval requirement met.");
+            }

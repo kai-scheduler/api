@@ -20,8 +20,14 @@ build: ## Build all packages.
 	go build ./...
 
 .PHONY: test
-test: ## Run all tests.
-	go test ./...
+test: ## Run all tests with coverage.
+	mkdir -p coverage
+	go test -coverprofile=coverage/coverage.out ./...
+
+.PHONY: validate
+validate: ## Check formatting and vet without writing files (CI).
+	@if [ -n "$$(gofmt -l .)" ]; then echo "Files need formatting:"; gofmt -l .; exit 1; fi
+	go vet ./...
 
 .PHONY: lint
 lint: ## Format and vet.
