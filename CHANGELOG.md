@@ -5,6 +5,14 @@ All notable changes to api will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.1] - 2026-07-26
+
+### Added
+- `kai.scheduler/v1` API group (`kai/v1`): `Config` and `SchedulingShard` types plus their component sub-packages, with generated CRD manifests. `usagedb` config structs (`UsageDBConfig`, `UsageParams`, `WindowType`), `podgrouper/constants`, and `utilities/math` (`SaturatingAdd`).
+
+### Changed
+- Re-synced `utilities/resources` (DRA GPU-count overflow fix), `scheduling/v2alpha2` PodGroup types, and `podgrouper/constants` with KAI-Scheduler main.
+
 ## [v0.1.0]
 
 Initial release of the standalone `github.com/kai-scheduler/api` module, seeded from KAI-Scheduler `main`.

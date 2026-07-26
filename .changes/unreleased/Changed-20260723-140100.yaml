@@ -1,3 +1,0 @@
-kind: Changed
-body: |-
-  Re-synced `utilities/resources` (DRA GPU-count overflow fix), `scheduling/v2alpha2` PodGroup types, and `podgrouper/constants` with KAI-Scheduler main.
