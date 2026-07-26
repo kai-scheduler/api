@@ -1,0 +1,5 @@
+kind: Changed
+body: Move Usage section from README to USAGE.md and bump install snippet to v0.1.1.
+custom:
+  Issue: "12"
+  Author: SiorMeir
