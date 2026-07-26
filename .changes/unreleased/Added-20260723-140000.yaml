@@ -1,3 +1,0 @@
-kind: Added
-body: |-
-  `kai.scheduler/v1` API group (`kai/v1`): `Config` and `SchedulingShard` types plus their component sub-packages, with generated CRD manifests. `usagedb` config structs (`UsageDBConfig`, `UsageParams`, `WindowType`), `podgrouper/constants`, and `utilities/math` (`SaturatingAdd`).
