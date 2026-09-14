@@ -1,3 +1,0 @@
-kind: Added
-body: |-
-  Add FIPSOnly, InPlacePodResize, and PodGroup minMember=0 support
