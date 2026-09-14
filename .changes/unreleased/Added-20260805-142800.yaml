@@ -1,0 +1,2 @@
+kind: Added
+body: Add PriorityClassName, GoMemLimit(Ratio) and ExtendedResourceClaimAllocation types
