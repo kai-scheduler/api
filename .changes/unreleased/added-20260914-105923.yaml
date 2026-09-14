@@ -1,0 +1,3 @@
+kind: Added
+body: |-
+  Add GangScheduleDeployment option to kai/v1 pod-grouper Args
