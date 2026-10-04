@@ -5,6 +5,11 @@ All notable changes to api will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.4] - 2026-10-04
+
+### Added
+- Sync API types with KAI-Scheduler main: NvFractions GPU sharing, semi-preemptible, fractional GPU groups, admission service name [#18](https://github.com/kai-scheduler/api/issues/18) [SiorMeir](https://github.com/SiorMeir)
+
 ## [v0.1.3] - 2026-09-14
 
 ### Added
