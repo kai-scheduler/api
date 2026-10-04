@@ -1,0 +1,3 @@
+kind: Added
+body: |-
+  Sync API types with KAI-Scheduler main: NvFractions GPU sharing, semi-preemptible, fractional GPU groups, admission service name
