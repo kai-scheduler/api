@@ -12,6 +12,7 @@ const (
 
 	PreemptionDelayAnnotationKey      = "kai.scheduler/preemption-delay"
 	StalenessGracePeriodAnnotationKey = "kai.scheduler/staleness-grace-period"
+	SafeToDisruptAnnotationKey        = "kai.scheduler/safe-to-disrupt"
 
 	BuildPriorityClass     = "build"
 	TrainPriorityClass     = "train"
