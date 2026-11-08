@@ -36,6 +36,10 @@ type Admission struct {
 	// +kubebuilder:validation:Optional
 	Replicas *int32 `json:"replicas,omitempty"`
 
+	// Autoscaling configures horizontal autoscaling for the admission service
+	// +kubebuilder:validation:Optional
+	Autoscaling *Autoscaling `json:"autoscaling,omitempty"`
+
 	// GPUSharing enables GPU sharing functionality for the admission service
 	// +kubebuilder:validation:Optional
 	GPUSharing *bool `json:"gpuSharing,omitempty"`
@@ -80,6 +84,35 @@ type Admission struct {
 	InPlacePodResize *InPlacePodResize `json:"inPlacePodResize,omitempty"`
 }
 
+// Autoscaling defines horizontal autoscaling configuration for the admission service.
+type Autoscaling struct {
+	// Enabled enables horizontal autoscaling for the admission service.
+	// +kubebuilder:validation:Optional
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// MaxReplicas specifies the maximum number of admission replicas.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=1
+	MaxReplicas *int32 `json:"maxReplicas,omitempty"`
+
+	// TargetInFlightRequests specifies the target average number of in-flight
+	// webhook requests per admission pod.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=1
+	TargetInFlightRequests *int32 `json:"targetInFlightRequests,omitempty"`
+
+	// TargetCPUUtilizationPercentage specifies the target average CPU utilization
+	// across admission pods.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=100
+	TargetCPUUtilizationPercentage *int32 `json:"targetCPUUtilizationPercentage,omitempty"`
+}
+
+func (a *Autoscaling) SetDefaultsWhereNeeded() {
+	a.Enabled = common.SetDefault(a.Enabled, ptr.To(false))
+}
+
 // InPlacePodResize configures KEP-1287 in-place pod resize admission behaviour.
 type InPlacePodResize struct {
 	// ValidateQuota enables best-effort hierarchical queue quota checks on
@@ -110,6 +143,10 @@ func (b *Admission) SetDefaultsWhereNeeded(replicaCount *int32, globalVPA *commo
 	b.Webhook.SetDefaultsWhereNeeded()
 
 	b.Replicas = common.SetDefault(b.Replicas, ptr.To(ptr.Deref(replicaCount, 1)))
+	if b.Autoscaling != nil {
+		b.Autoscaling.SetDefaultsWhereNeeded()
+	}
+
 	b.GPUSharing = common.SetDefault(b.GPUSharing, ptr.To(gpuSharingEnabledForMode(gpuSharingMode)))
 	b.QueueLabelSelector = common.SetDefault(b.QueueLabelSelector, ptr.To(false))
 	b.BlockNvidiaVisibleDevices = common.SetDefault(b.BlockNvidiaVisibleDevices, ptr.To(false))
