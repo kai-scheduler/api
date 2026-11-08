@@ -1,3 +1,0 @@
-kind: Added
-body: |-
-  Support optional manifest digests in common.Image references

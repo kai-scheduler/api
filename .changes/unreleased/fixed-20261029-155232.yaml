@@ -1,5 +1,0 @@
-kind: Fixed
-body: |-
-  Accept a GPU portion limit (gpu-memory.portion.limit and the legacy gpu-fraction.limit) equal to gpu-fraction, matching the GPU memory limit rule
-custom:
-  Author: "barakle1"
