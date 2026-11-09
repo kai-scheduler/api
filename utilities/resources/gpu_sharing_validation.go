@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kai-scheduler/api/constants"
+	schedulingv1alpha2 "github.com/kai-scheduler/api/scheduling/v1alpha2"
 )
 
 // ValidateGPUFractionRequest validates a pod's GPU fraction request across all
@@ -24,6 +25,11 @@ func ValidateGPUFractionRequest(pod *v1.Pod) error {
 		return err
 	}
 	if err := validateGpuMemoryPortionLimitAnnotation(pod); err != nil {
+		return err
+	}
+
+	// Check compute keys before a pod without a memory fraction can return early.
+	if err := validateGpuComputeFractions(pod); err != nil {
 		return err
 	}
 
@@ -299,4 +305,125 @@ func getFirstGPULimit(pod *v1.Pod) *resource.Quantity {
 		}
 	}
 	return nil
+}
+
+func validateGpuComputeFractions(pod *v1.Pod) error {
+	computeByContainer := map[string]ComputePolicy{}
+	for annotationKey, annotationValue := range pod.Annotations {
+		if !strings.HasPrefix(annotationKey, constants.NvFractionsAnnotationPrefix) {
+			continue
+		}
+		var policy ComputePolicy
+		switch {
+		case strings.HasSuffix(annotationKey, constants.GpuComputeMinGuaranteedSuffix):
+			policy = ComputePolicyMinGuaranteed
+		case strings.HasSuffix(annotationKey, constants.GpuComputeMaxAllowedSuffix):
+			policy = ComputePolicyMaxAllowed
+		default:
+			continue
+		}
+		if _, err := parseGpuComputeShare(annotationKey, annotationValue); err != nil {
+			return err
+		}
+
+		containerName, _, err := parseNvFractionsAnnotationKey(annotationKey)
+		if err != nil {
+			return err
+		}
+		if err := validateContainerExists(pod, containerName); err != nil {
+			return err
+		}
+
+		if existing, ok := computeByContainer[containerName]; ok && existing != policy {
+			return fmt.Errorf("gpu-compute.min-guaranteed and gpu-compute.max-allowed are mutually exclusive")
+		}
+		computeByContainer[containerName] = policy
+	}
+
+	if len(computeByContainer) == 0 {
+		return nil
+	}
+
+	if err := validateGpuComputeNeedsMemory(pod); err != nil {
+		return err
+	}
+	if err := validateGpuComputeMode(pod, computeByContainer); err != nil {
+		return err
+	}
+	// Use the same container resolution as memory translation and binding.
+	_, err := GetFractionContainerRef(pod)
+	return err
+}
+
+func validateGpuComputeNeedsMemory(pod *v1.Pod) error {
+	if hasGpuMemoryFraction(pod) {
+		return nil
+	}
+	for annotationKey := range pod.Annotations {
+		if !strings.HasPrefix(annotationKey, constants.NvFractionsAnnotationPrefix) {
+			continue
+		}
+		if !strings.HasSuffix(annotationKey, constants.GpuComputeMinGuaranteedSuffix) &&
+			!strings.HasSuffix(annotationKey, constants.GpuComputeMaxAllowedSuffix) {
+			continue
+		}
+		policy := ComputePolicyMinGuaranteed
+		if strings.HasSuffix(annotationKey, constants.GpuComputeMaxAllowedSuffix) {
+			policy = ComputePolicyMaxAllowed
+		}
+		return fmt.Errorf(
+			"gpu-compute.%s requires a GPU memory fraction (gpu-fraction, gpu-memory or .gpu-memory.request)",
+			policy,
+		)
+	}
+	return nil
+}
+
+func hasGpuMemoryFraction(pod *v1.Pod) bool {
+	if v, ok := pod.Annotations[constants.GpuFraction]; ok && v != "" {
+		return true
+	}
+	if v, ok := pod.Annotations[constants.GpuMemory]; ok && v != "" {
+		return true
+	}
+	for annotationKey, annotationValue := range pod.Annotations {
+		if !strings.HasPrefix(annotationKey, constants.NvFractionsAnnotationPrefix) {
+			continue
+		}
+		if annotationValue == "" {
+			continue
+		}
+		if strings.HasSuffix(annotationKey, constants.NvFractionsMemoryRequestSuffix) ||
+			strings.HasSuffix(annotationKey, constants.NvFractionsMemoryLimitSuffix) {
+			return true
+		}
+	}
+	return false
+}
+
+func validateGpuComputeMode(pod *v1.Pod, computeByContainer map[string]ComputePolicy) error {
+	for containerName, policy := range computeByContainer {
+		if policy != ComputePolicyMaxAllowed {
+			continue
+		}
+		mode := getContainerComputeMode(pod, containerName)
+		if mode != nil && *mode == schedulingv1alpha2.GPUComputeSharingModeSMSharing {
+			continue
+		}
+		return fmt.Errorf("gpu-compute.max-allowed is supported only with gpu-compute.mode=sm-sharing")
+	}
+	return nil
+}
+
+// A nil mode uses the default, time-slicing.
+func getContainerComputeMode(pod *v1.Pod, containerName string) *schedulingv1alpha2.GPUComputeSharingMode {
+	raw, ok := pod.Annotations[CalcGpuComputeSharingModeAnnotationForContainer(containerName)]
+	if !ok || raw == "" {
+		return nil
+	}
+	if !IsValidGPUComputeSharingMode(raw) {
+		return nil
+	}
+	mode := schedulingv1alpha2.GPUComputeSharingMode(raw)
+	return &mode
 }

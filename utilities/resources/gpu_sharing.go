@@ -49,7 +49,21 @@ type NvFractionsContainerRequest struct {
 	Request     *resource.Quantity
 	Limit       *resource.Quantity
 	ComputeMode *schedulingv1alpha2.GPUComputeSharingMode
+	// ComputeShare is in units of 1e-5; nil when no compute share is requested.
+	ComputeShare *int64
+	// ComputePolicy is set only when ComputeShare is non-nil.
+	ComputePolicy ComputePolicy
 }
+
+// ComputePolicy selects the guarantee and burst behavior of a compute share.
+type ComputePolicy string
+
+const (
+	// ComputePolicyMinGuaranteed guarantees a floor and allows bursting into idle capacity.
+	ComputePolicyMinGuaranteed ComputePolicy = "min-guaranteed"
+	// ComputePolicyMaxAllowed is a ceiling: the container gets exactly its share.
+	ComputePolicyMaxAllowed ComputePolicy = "max-allowed"
+)
 
 var (
 	fractionDevicesAnnotationNotFound = fmt.Errorf("num GPU fraction devices annotation not found")

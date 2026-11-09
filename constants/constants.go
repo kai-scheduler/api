@@ -88,12 +88,19 @@ const (
 	NvFractionsMemoryLimitSuffix    = ".gpu-memory.limit"
 	NvFractionsVisibleDevicesSuffix = ".gpus.devices"
 	GpuComputeSharingModeSuffix     = ".gpu-compute.mode"
+	GpuComputeMinGuaranteedSuffix   = ".gpu-compute.min-guaranteed"
+	GpuComputeMaxAllowedSuffix      = ".gpu-compute.max-allowed"
+	GpuComputeAppliedSuffix         = ".gpu-compute.applied"
 
 	KaiFractionContainerAnnotationPrefix = "kai.scheduler/container."
 	GpuMemoryPortionLimitSuffix          = ".gpu-memory.portion.limit"
 
 	// gpu-fractioning statuses
 	NvFractionNodeReadyConditionType = "gpu-fractioning.nvidia.com/Ready"
+
+	// Ready reasons indicating the node's fraction support tier.
+	NvFractionNodeReadyReasonMemoryOnly = "MemoryOnly"
+	NvFractionNodeReadyReasonFull       = "Full"
 )
 
 // QueueValidatedVersions returns the list of queue versions that we validate with a webhook. This will be used by the

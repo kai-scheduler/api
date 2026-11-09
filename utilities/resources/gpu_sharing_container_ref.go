@@ -59,6 +59,9 @@ func GetNvFractionsContainerName(annotations map[string]string) (string, bool, e
 		if !strings.HasPrefix(annotationKey, constants.NvFractionsAnnotationPrefix) {
 			continue
 		}
+		if isGpuComputeAppliedAnnotation(annotationKey) {
+			continue
+		}
 
 		currentName, _, err := parseNvFractionsAnnotationKey(annotationKey)
 		if err != nil {
