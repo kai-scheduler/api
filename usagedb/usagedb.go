@@ -9,10 +9,13 @@ import (
 )
 
 type UsageDBConfig struct {
-	ClientType             string       `yaml:"clientType" json:"clientType"`
-	ConnectionString       string       `yaml:"connectionString,omitempty" json:"connectionString,omitempty"`
-	ConnectionStringEnvVar string       `yaml:"connectionStringEnvVar,omitempty" json:"connectionStringEnvVar,omitempty"`
-	UsageParams            *UsageParams `yaml:"usageParams,omitempty" json:"usageParams,omitempty"`
+	ClientType             string `yaml:"clientType" json:"clientType"`
+	ConnectionString       string `yaml:"connectionString,omitempty" json:"connectionString,omitempty"`
+	ConnectionStringEnvVar string `yaml:"connectionStringEnvVar,omitempty" json:"connectionStringEnvVar,omitempty"`
+	// Auth configures how the client authenticates to the usage database.
+	// If not set, requests carry no credentials.
+	Auth        *Auth        `yaml:"auth,omitempty" json:"auth,omitempty"`
+	UsageParams *UsageParams `yaml:"usageParams,omitempty" json:"usageParams,omitempty"`
 }
 
 // GetUsageParams returns the usage params if set, and default params if not set.
@@ -30,6 +33,7 @@ func (c *UsageDBConfig) DeepCopy() *UsageDBConfig {
 	out.ClientType = c.ClientType
 	out.ConnectionString = c.ConnectionString
 	out.ConnectionStringEnvVar = c.ConnectionStringEnvVar
+	out.Auth = c.Auth.DeepCopy()
 	if c.UsageParams != nil {
 		out.UsageParams = c.UsageParams.DeepCopy()
 	}
