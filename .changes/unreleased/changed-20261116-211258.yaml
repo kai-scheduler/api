@@ -1,0 +1,3 @@
+kind: Changed
+body: |-
+  Key PodGroup scheduling conditions by node pool for independent server-side apply ownership
