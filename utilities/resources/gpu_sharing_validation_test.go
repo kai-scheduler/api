@@ -177,6 +177,77 @@ func TestValidateGpuMemoryPortionLimitAnnotation(t *testing.T) {
 	}
 }
 
+func TestValidateGPUFractionRequest_TranslatedLimits(t *testing.T) {
+	nvRequestKey := CalcGpuFractionAnnotationForContainer("container-0")
+	nvLimitKey := CalcGpuFractionLimitAnnotationForContainer("container-0")
+	portionLimitKey := CalcGpuMemoryPortionLimitAnnotationForContainer("container-0")
+
+	tests := []struct {
+		name              string
+		annotations       map[string]string
+		wantErrContaining string
+	}{
+		{
+			name: "gpu-fraction with portion limit accepts the binder-translated NvFractions limit",
+			annotations: map[string]string{
+				constants.GpuFraction: "0.5",
+				portionLimitKey:       "0.8",
+				nvRequestKey:          "1000Mi",
+				nvLimitKey:            "1600Mi",
+			},
+		},
+		{
+			name: "gpu-fraction.limit shorthand, translated to a portion limit, accepts the NvFractions limit",
+			annotations: map[string]string{
+				constants.GpuFraction:      "0.5",
+				constants.GpuFractionLimit: "0.8",
+				portionLimitKey:            "0.8",
+				nvRequestKey:               "1000Mi",
+				nvLimitKey:                 "1600Mi",
+			},
+		},
+		{
+			name: "gpu-fraction without portion limit rejects an NvFractions limit",
+			annotations: map[string]string{
+				constants.GpuFraction: "0.5",
+				nvRequestKey:          "1000Mi",
+				nvLimitKey:            "1600Mi",
+			},
+			wantErrContaining: "with gpu-fraction annotation unless a gpu-memory.portion.limit annotation is set",
+		},
+		{
+			name: "gpu-memory with gpu-memory.limit accepts the translated NvFractions limit",
+			annotations: map[string]string{
+				constants.GpuMemory:      "1000",
+				constants.GpuMemoryLimit: "1600Mi",
+				nvRequestKey:             "1000Mi",
+				nvLimitKey:               "1600Mi",
+			},
+		},
+		{
+			name: "gpu-memory without gpu-memory.limit rejects an NvFractions limit",
+			annotations: map[string]string{
+				constants.GpuMemory: "1000",
+				nvRequestKey:        "1000Mi",
+				nvLimitKey:          "1600Mi",
+			},
+			wantErrContaining: "with gpu-memory annotation unless the gpu-memory.limit annotation is set",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pod := &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Annotations: tt.annotations},
+				Spec:       v1.PodSpec{Containers: []v1.Container{{Name: "container-0"}}},
+			}
+
+			err := ValidateGPUFractionRequest(pod)
+			assertErrorContains(t, err, tt.wantErrContaining)
+		})
+	}
+}
+
 func TestValidateGPUFractionRequest_ComputeSharingMode(t *testing.T) {
 	tests := []struct {
 		name        string
