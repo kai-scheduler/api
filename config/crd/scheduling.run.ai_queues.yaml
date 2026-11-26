@@ -33,6 +33,15 @@ spec:
     - jsonPath: .spec.displayName
       name: DisplayName
       type: string
+    - jsonPath: .spec.resources.gpu.quota
+      name: GPUQuota
+      type: number
+    - jsonPath: .status.allocated.nvidia\.com/gpu
+      name: GPUAllocated
+      type: string
+    - jsonPath: .spec.resources.gpu.overQuotaWeight
+      name: GPUOverQuotaWeight
+      type: number
     name: v2
     schema:
       openAPIV3Schema:

@@ -22,7 +22,30 @@ spec:
     singular: podgroup
   scope: Namespaced
   versions:
-  - name: v2alpha2
+  - additionalPrinterColumns:
+    - jsonPath: .spec.queue
+      name: Queue
+      type: string
+    - jsonPath: .spec.minMember
+      name: MinMember
+      type: integer
+    - jsonPath: .spec.priorityClassName
+      name: PriorityClass
+      priority: 1
+      type: string
+    - jsonPath: .spec.preemptibility
+      name: Preemptibility
+      priority: 1
+      type: string
+    - description: First reason of the most recent scheduling condition; the scheduler
+        keeps the newest condition last
+      jsonPath: .status.schedulingConditions[-1:].reasons[*].reason
+      name: Unschedulable
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v2alpha2
     schema:
       openAPIV3Schema:
         description: PodGroup is the Schema for the podgroups API

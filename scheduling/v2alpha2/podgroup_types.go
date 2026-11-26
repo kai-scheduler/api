@@ -296,6 +296,12 @@ type SchedulingCondition struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 // +kubebuilder:resource:shortName=pg
+// +kubebuilder:printcolumn:name="Queue",type=string,JSONPath=`.spec.queue`
+// +kubebuilder:printcolumn:name="MinMember",type=integer,JSONPath=`.spec.minMember`
+// +kubebuilder:printcolumn:name="PriorityClass",type=string,JSONPath=`.spec.priorityClassName`,priority=1
+// +kubebuilder:printcolumn:name="Preemptibility",type=string,JSONPath=`.spec.preemptibility`,priority=1
+// +kubebuilder:printcolumn:name="Unschedulable",type=string,JSONPath=`.status.schedulingConditions[-1:].reasons[*].reason`,description="First reason of the most recent scheduling condition; the scheduler keeps the newest condition last"
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // PodGroup is the Schema for the podgroups API
 type PodGroup struct {
