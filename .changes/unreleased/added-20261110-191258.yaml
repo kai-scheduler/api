@@ -1,0 +1,3 @@
+kind: Added
+body: |-
+  `usagedb.UsageDBConfig.Auth`: basic auth or an `Authorization` header for the usage database client, with the credentials taken from Secret keys or files, and `Auth.Validate` to check them
