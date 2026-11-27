@@ -273,6 +273,9 @@ func (s *SchedulingShardSpec) setDefaultPlugins() {
 		if s.MinRuntime.ReclaimMinRuntime != nil {
 			defaults["minruntime"].Arguments["defaultReclaimMinRuntime"] = *s.MinRuntime.ReclaimMinRuntime
 		}
+		if s.MinRuntime.ConsolidationMinRuntime != nil {
+			defaults["minruntime"].Arguments["defaultConsolidationMinRuntime"] = *s.MinRuntime.ConsolidationMinRuntime
+		}
 	}
 
 	defaults["nodeplacement"].Arguments["gpu"] = *s.PlacementStrategy.GPU
@@ -342,6 +345,10 @@ type MinRuntime struct {
 	// ReclaimMinRuntime specifies the minimum runtime of a job in queue before it can be reclaimed
 	// +kubebuilder:validation:Optional
 	ReclaimMinRuntime *string `json:"reclaimMinRuntime,omitempty"`
+
+	// ConsolidationMinRuntime specifies the default minimum runtime before a job can be moved by consolidation.
+	// +kubebuilder:validation:Optional
+	ConsolidationMinRuntime *string `json:"consolidationMinRuntime,omitempty"`
 }
 
 // PlacementStrategy defines the scheduling strategy of NodePool

@@ -58,6 +58,13 @@ spec:
           spec:
             description: QueueSpec defines the desired state of Queue
             properties:
+              consolidationMinRuntime:
+                description: |-
+                  ConsolidationMinRuntime is the minimum runtime before consolidation can move a job in this queue.
+                  If unset, the scheduler uses the nearest ancestor queue that sets it, then the SchedulingShard default.
+                  If neither is set, the scheduler uses the larger of the resolved preempt and reclaim minimum runtimes.
+                  An explicit 0s overrides inheritance and fallback.
+                type: string
               displayName:
                 type: string
               parentQueue:

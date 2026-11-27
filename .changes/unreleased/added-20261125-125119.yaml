@@ -1,0 +1,6 @@
+kind: Added
+body: |-
+  Independent consolidation minimum-runtime settings for queues and scheduling shards
+custom:
+  Author: "enoodle"
+  Issue: "37"
