@@ -56,4 +56,42 @@ var _ = Describe("Admission", func() {
 		Admission.SetDefaultsWhereNeeded(nil, nil, common.GpuSharingModeHamiCore)
 		Expect(*Admission.GPUSharing).To(BeFalse())
 	})
+	It("does not configure autoscaling by default", func(ctx context.Context) {
+		admission := &Admission{}
+
+		admission.SetDefaultsWhereNeeded(nil, nil, common.GpuSharingModeNonMemoryEnforced)
+
+		Expect(admission.Autoscaling).To(BeNil())
+	})
+
+	It("sets autoscaling defaults when configured", func(ctx context.Context) {
+		admission := &Admission{
+			Autoscaling: &Autoscaling{},
+		}
+
+		admission.SetDefaultsWhereNeeded(nil, nil, common.GpuSharingModeNonMemoryEnforced)
+
+		Expect(*admission.Autoscaling.Enabled).To(BeFalse())
+		Expect(admission.Autoscaling.MaxReplicas).To(BeNil())
+		Expect(admission.Autoscaling.TargetInFlightRequests).To(BeNil())
+		Expect(admission.Autoscaling.TargetCPUUtilizationPercentage).To(BeNil())
+	})
+
+	It("preserves explicit autoscaling configuration", func(ctx context.Context) {
+		admission := &Admission{
+			Autoscaling: &Autoscaling{
+				Enabled:                        ptr.To(true),
+				MaxReplicas:                    ptr.To(int32(5)),
+				TargetInFlightRequests:         ptr.To(int32(20)),
+				TargetCPUUtilizationPercentage: ptr.To(int32(80)),
+			},
+		}
+
+		admission.SetDefaultsWhereNeeded(nil, nil, common.GpuSharingModeNonMemoryEnforced)
+
+		Expect(*admission.Autoscaling.Enabled).To(BeTrue())
+		Expect(*admission.Autoscaling.MaxReplicas).To(Equal(int32(5)))
+		Expect(*admission.Autoscaling.TargetInFlightRequests).To(Equal(int32(20)))
+		Expect(*admission.Autoscaling.TargetCPUUtilizationPercentage).To(Equal(int32(80)))
+	})
 })
