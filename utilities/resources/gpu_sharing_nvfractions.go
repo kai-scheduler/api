@@ -5,6 +5,7 @@ package resources
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
@@ -21,6 +22,9 @@ const (
 	nvFractionsLimitAnnotation
 	nvFractionsDevicesAnnotation
 	nvFractionsComputeModeAnnotation
+	nvFractionsComputeMinGuaranteedAnnotation
+	nvFractionsComputeMaxAllowedAnnotation
+	nvFractionsComputeAppliedAnnotation
 )
 
 func CalcGpuFractionAnnotationForContainer(containerName string) string {
@@ -35,6 +39,18 @@ func CalcGpuVisibleDevicesAnnotationForContainer(containerName string) string {
 	return constants.NvFractionsAnnotationPrefix + containerName + constants.NvFractionsVisibleDevicesSuffix
 }
 
+func CalcGpuComputeMinGuaranteedAnnotationForContainer(containerName string) string {
+	return constants.NvFractionsAnnotationPrefix + containerName + constants.GpuComputeMinGuaranteedSuffix
+}
+
+func CalcGpuComputeMaxAllowedAnnotationForContainer(containerName string) string {
+	return constants.NvFractionsAnnotationPrefix + containerName + constants.GpuComputeMaxAllowedSuffix
+}
+
+func CalcGpuComputeAppliedAnnotationForContainer(containerName string) string {
+	return constants.NvFractionsAnnotationPrefix + containerName + constants.GpuComputeAppliedSuffix
+}
+
 func ExtractNvFractionsData(pod *v1.Pod) (map[string]NvFractionsContainerRequest, error) {
 	fractionsData := make(map[string]NvFractionsContainerRequest)
 	for annotationKey, annotationValue := range pod.Annotations {
@@ -44,6 +60,10 @@ func ExtractNvFractionsData(pod *v1.Pod) (map[string]NvFractionsContainerRequest
 		if isNvFractionsDeviceListAnnotation(annotationKey) {
 			continue
 		}
+		// .gpu-compute.applied is runtime output from gpu-fractioning, not a request.
+		if isGpuComputeAppliedAnnotation(annotationKey) {
+			continue
+		}
 
 		containerName, annotationType, err := parseNvFractionsAnnotationKey(annotationKey)
 		if err != nil {
@@ -51,7 +71,8 @@ func ExtractNvFractionsData(pod *v1.Pod) (map[string]NvFractionsContainerRequest
 		}
 
 		containerData := fractionsData[containerName]
-		if annotationType == nvFractionsComputeModeAnnotation {
+		switch annotationType {
+		case nvFractionsComputeModeAnnotation:
 			if !IsValidGPUComputeSharingMode(annotationValue) {
 				return nil, fmt.Errorf("invalid NvFractions compute mode: %s", annotationValue)
 			}
@@ -59,8 +80,30 @@ func ExtractNvFractionsData(pod *v1.Pod) (map[string]NvFractionsContainerRequest
 			containerData.ComputeMode = &mode
 			fractionsData[containerName] = containerData
 			continue
-		}
-		switch annotationType {
+		case nvFractionsComputeMinGuaranteedAnnotation:
+			if containerData.ComputePolicy == ComputePolicyMaxAllowed {
+				return nil, fmt.Errorf("gpu-compute.min-guaranteed and gpu-compute.max-allowed are mutually exclusive")
+			}
+			share, err := parseGpuComputeShare(annotationKey, annotationValue)
+			if err != nil {
+				return nil, err
+			}
+			containerData.ComputeShare = &share
+			containerData.ComputePolicy = ComputePolicyMinGuaranteed
+			fractionsData[containerName] = containerData
+			continue
+		case nvFractionsComputeMaxAllowedAnnotation:
+			if containerData.ComputePolicy == ComputePolicyMinGuaranteed {
+				return nil, fmt.Errorf("gpu-compute.min-guaranteed and gpu-compute.max-allowed are mutually exclusive")
+			}
+			share, err := parseGpuComputeShare(annotationKey, annotationValue)
+			if err != nil {
+				return nil, err
+			}
+			containerData.ComputeShare = &share
+			containerData.ComputePolicy = ComputePolicyMaxAllowed
+			fractionsData[containerName] = containerData
+			continue
 		case nvFractionsRequestAnnotation:
 			gpuMemory, err := parseNvFractionsAnnotationValue(annotationKey, annotationValue)
 			if err != nil {
@@ -133,6 +176,27 @@ func parseNvFractionsAnnotationKey(annotationKey string) (string, nvFractionsAnn
 		}
 		return containerName, nvFractionsComputeModeAnnotation, nil
 	}
+	if strings.HasSuffix(annotationKey, constants.GpuComputeMinGuaranteedSuffix) {
+		containerName := strings.TrimSuffix(containerNameWithSuffix, constants.GpuComputeMinGuaranteedSuffix)
+		if containerName == "" {
+			return "", 0, fmt.Errorf("invalid NvFractions annotation key: %s", annotationKey)
+		}
+		return containerName, nvFractionsComputeMinGuaranteedAnnotation, nil
+	}
+	if strings.HasSuffix(annotationKey, constants.GpuComputeMaxAllowedSuffix) {
+		containerName := strings.TrimSuffix(containerNameWithSuffix, constants.GpuComputeMaxAllowedSuffix)
+		if containerName == "" {
+			return "", 0, fmt.Errorf("invalid NvFractions annotation key: %s", annotationKey)
+		}
+		return containerName, nvFractionsComputeMaxAllowedAnnotation, nil
+	}
+	if strings.HasSuffix(annotationKey, constants.GpuComputeAppliedSuffix) {
+		containerName := strings.TrimSuffix(containerNameWithSuffix, constants.GpuComputeAppliedSuffix)
+		if containerName == "" {
+			return "", 0, fmt.Errorf("invalid NvFractions annotation key: %s", annotationKey)
+		}
+		return containerName, nvFractionsComputeAppliedAnnotation, nil
+	}
 	return "", 0, fmt.Errorf("invalid NvFractions annotation key: %s", annotationKey)
 }
 
@@ -144,6 +208,57 @@ func parseNvFractionsAnnotationValue(annotationKey, annotationValue string) (res
 		)
 	}
 	return gpuMemory, nil
+}
+
+func isGpuComputeAppliedAnnotation(annotationKey string) bool {
+	return strings.HasSuffix(annotationKey, constants.GpuComputeAppliedSuffix)
+}
+
+// parseGpuComputeShare converts a decimal in (0, 1) to 1e-5 units without float rounding.
+func parseGpuComputeShare(annotationKey, annotationValue string) (int64, error) {
+	raw := strings.TrimSpace(annotationValue)
+	if raw == "" {
+		return 0, fmt.Errorf("gpu-compute.%s must be a decimal in (0, 1)", policySuffixForError(annotationKey))
+	}
+
+	integerPart, fractionPart, hasDecimalPoint := strings.Cut(raw, ".")
+	if integerPart == "" || integerPart != "0" {
+		return 0, fmt.Errorf("gpu-compute.%s must be a decimal in (0, 1)", policySuffixForError(annotationKey))
+	}
+	if !hasDecimalPoint || fractionPart == "" {
+		return 0, fmt.Errorf("gpu-compute.%s must be a decimal in (0, 1)", policySuffixForError(annotationKey))
+	}
+	if len(fractionPart) > 5 {
+		return 0, fmt.Errorf("gpu-compute.%s must be a decimal in (0, 1)", policySuffixForError(annotationKey))
+	}
+	for _, r := range fractionPart {
+		if r < '0' || r > '9' {
+			return 0, fmt.Errorf("gpu-compute.%s must be a decimal in (0, 1)", policySuffixForError(annotationKey))
+		}
+	}
+	for _, r := range integerPart {
+		if r < '0' || r > '9' {
+			return 0, fmt.Errorf("gpu-compute.%s must be a decimal in (0, 1)", policySuffixForError(annotationKey))
+		}
+	}
+
+	padded := fractionPart + strings.Repeat("0", 5-len(fractionPart))
+	share, err := strconv.ParseInt(padded, 10, 64)
+	if err != nil || share <= 0 || share >= 100000 {
+		return 0, fmt.Errorf("gpu-compute.%s must be a decimal in (0, 1)", policySuffixForError(annotationKey))
+	}
+	return share, nil
+}
+
+func policySuffixForError(annotationKey string) string {
+	switch {
+	case strings.HasSuffix(annotationKey, constants.GpuComputeMinGuaranteedSuffix):
+		return string(ComputePolicyMinGuaranteed)
+	case strings.HasSuffix(annotationKey, constants.GpuComputeMaxAllowedSuffix):
+		return string(ComputePolicyMaxAllowed)
+	default:
+		return string(ComputePolicyMinGuaranteed)
+	}
 }
 
 func defaultRequestFromLimit(containerData *NvFractionsContainerRequest) {
