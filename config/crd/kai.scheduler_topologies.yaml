@@ -35,7 +35,23 @@ spec:
     singular: topology
   scope: Cluster
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Node label of the highest (broadest) topology level
+      jsonPath: .spec.levels[0].nodeLabel
+      name: Highest
+      type: string
+    - description: Node label of the lowest topology level
+      jsonPath: .spec.levels[-1:].nodeLabel
+      name: Lowest
+      type: string
+    - jsonPath: .spec.levels
+      name: Levels
+      priority: 1
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Topology is the Schema for the topology API
@@ -112,3 +128,4 @@ spec:
         type: object
     served: true
     storage: true
+    subresources: {}

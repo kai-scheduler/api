@@ -30,6 +30,10 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:storageversion
 // +kubebuilder:resource:scope=Cluster
+// +kubebuilder:printcolumn:name="Highest",type=string,JSONPath=`.spec.levels[0].nodeLabel`,description="Node label of the highest (broadest) topology level"
+// +kubebuilder:printcolumn:name="Lowest",type=string,JSONPath=`.spec.levels[-1:].nodeLabel`,description="Node label of the lowest topology level"
+// +kubebuilder:printcolumn:name="Levels",type=string,JSONPath=`.spec.levels`,priority=1
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // Topology is the Schema for the topology API
 type Topology struct {

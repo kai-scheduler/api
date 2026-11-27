@@ -20,7 +20,24 @@ spec:
     singular: bindrequest
   scope: Namespaced
   versions:
-  - name: v1alpha2
+  - additionalPrinterColumns:
+    - jsonPath: .spec.podName
+      name: Pod
+      type: string
+    - jsonPath: .spec.selectedNode
+      name: Node
+      type: string
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.reason
+      name: Reason
+      priority: 1
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha2
     schema:
       openAPIV3Schema:
         description: BindRequest is the Schema for the bindrequests API

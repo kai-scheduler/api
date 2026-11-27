@@ -88,6 +88,9 @@ type QueueStatus struct {
 // +kubebuilder:printcolumn:name="Parent",type=string,JSONPath=`.spec.parentQueue`
 // +kubebuilder:printcolumn:name="Children",type=string,JSONPath=`.status.childQueues`
 // +kubebuilder:printcolumn:name="DisplayName",type=string,JSONPath=`.spec.displayName`
+// +kubebuilder:printcolumn:name="GPUQuota",type=number,JSONPath=`.spec.resources.gpu.quota`
+// +kubebuilder:printcolumn:name="GPUAllocated",type=string,JSONPath=`.status.allocated.nvidia\.com/gpu`
+// +kubebuilder:printcolumn:name="GPUOverQuotaWeight",type=number,JSONPath=`.spec.resources.gpu.overQuotaWeight`
 
 // Queue is the Schema for the queues API
 type Queue struct {

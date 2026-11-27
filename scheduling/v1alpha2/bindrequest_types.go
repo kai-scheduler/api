@@ -169,6 +169,11 @@ type BindRequestStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
+// +kubebuilder:printcolumn:name="Pod",type=string,JSONPath=`.spec.podName`
+// +kubebuilder:printcolumn:name="Node",type=string,JSONPath=`.spec.selectedNode`
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
+// +kubebuilder:printcolumn:name="Reason",type=string,JSONPath=`.status.reason`,priority=1
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // BindRequest is the Schema for the bindrequests API
 type BindRequest struct {
