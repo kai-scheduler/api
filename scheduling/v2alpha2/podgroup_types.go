@@ -188,7 +188,9 @@ type PodGroupStatus struct {
 	// +optional
 	Conditions []PodGroupCondition `json:"conditions,omitempty" protobuf:"bytes,2,opt,name=conditions"`
 
-	// The scheduling conditions of PodGroup.
+	// The scheduling conditions of PodGroup, keyed by node pool.
+	// +listType=map
+	// +listMapKey=nodePool
 	// +optional
 	SchedulingConditions []SchedulingCondition `json:"schedulingConditions,omitempty" protobuf:"bytes,7,rep,name=schedulingConditions"`
 
@@ -204,6 +206,7 @@ type PodGroupStatus struct {
 
 // PodGroupSchedulingState carries the scheduler's authoritative accounting for this pod group.
 // It is populated exclusively by the scheduler; all other controllers MUST treat it as read-only.
+// +structType=atomic
 type PodGroupSchedulingState struct {
 	// CorePods names the allocated pods the scheduler protects from preemption and reclaim (the
 	// "core", i.e. the job's minimal satisfying set). Written only for semi-preemptible pod groups,
@@ -257,12 +260,13 @@ type PodGroupCondition struct {
 }
 
 // SchedulingCondition contains details for the current scheduling state of this pod group.
+// +structType=atomic
 type SchedulingCondition struct {
 	// Type is the type of the scheduling condition
 	Type SchedulingConditionType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type"`
 
 	// The Node Pool name on witch the scheduling condition happened
-	NodePool string `json:"nodePool,omitempty" protobuf:"bytes,2,opt,name=nodePool"`
+	NodePool string `json:"nodePool" protobuf:"bytes,2,opt,name=nodePool"`
 
 	// Unique, one-word, CamelCase reason for the phase's last transition.
 	// Deprecated: use Reasons instead
